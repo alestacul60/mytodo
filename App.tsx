@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, TextInput, ToastAndroid,TouchableOpacity, FlatList } from 'react-native';
 import  styles  from './styles/Styles';
 import  RenderItem  from './RenderItem';
 
@@ -11,6 +11,16 @@ export interface Task{
 }
 
 export default function App() {
+
+  const showToastWithGravityAndOffset = () => {
+    ToastAndroid.showWithGravityAndOffset(
+      'Esa tarea ya existe con ese nombre!',
+      ToastAndroid.LONG,
+      ToastAndroid.BOTTOM,
+      25,
+      50,
+    );
+  };
 
   const [text, setText] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -40,17 +50,21 @@ export default function App() {
   }, []);
 
   const addTask = () => {
-    const tmp = [...tasks]
-    const newTask = {
-      title: text,
-      done: false,
-      date: new Date(),
+
+    const existingTask = tasks.find((t) => t.title.toLowerCase() === text.toLowerCase());
+    if (existingTask) {
+      showToastWithGravityAndOffset();
+    } else {
+      const newTask = {
+        title: text,
+        done: false,
+        date: new Date(),
+      };
+      const tmp = [...tasks, newTask];
+      setTasks(tmp);
+      storeData(tmp);
+      setText('');
     }
-    tmp.push(newTask);
-    setTasks(tmp);
-    storeData(tmp);
-    setText('');
-  
   }
   const markDone = (task : Task) => {
     const tmp = [...tasks];
@@ -77,7 +91,7 @@ export default function App() {
                  style={ styles.textinput }
                  onChangeText={ (t: string) => setText(t) }
                  value={ text } />
-      <TouchableOpacity onPress={ addTask }style={ styles.addBoton }>
+      <TouchableOpacity onPress={ () => addTask() }style={ styles.addBoton }>
           <Text style={ styles.textoBlanco }>Agregar</Text>
       </TouchableOpacity>
     </View>
